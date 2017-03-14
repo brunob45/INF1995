@@ -1,0 +1,21 @@
+dbt;      // debut
+dal 63;   // allumer les DEL en position 1, 2, 3, 4, 5 et 6
+att 20;   // attendre 500 ms
+mav 102;  // avance avec une vitesse de 40%
+mar;      // le robot est immobile
+dbc 11;   // faire le code suivant 12 fois
+trd;      // le robot tourne a droite de 90 degres
+fbc;      // boucler a l'instruction dbc precedente
+det 21;   // eteindre les DEL 1, 3 et 5
+mre 128;  // vitesse de 50 % vers l'arriere
+sgo 57;   // emettre un son a 220 Hz
+trg;      // tourner a gauche de 90 degres
+mav 204;  // avance avec une vitesse de 80%
+mar;      // le robot est immobile
+det 42;   // eteindre les DEL en position 2, 4 et 6
+sar;      // arreter de jouer la sonorite en cours
+fin;      // fin du programme
+
+
+
+

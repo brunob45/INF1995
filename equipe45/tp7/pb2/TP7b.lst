@@ -1,0 +1,1525 @@
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 1
+
+
+   1               		.file	"TP7b.cpp"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               	.global	_ZN3canC2Ev
+  11               		.type	_ZN3canC2Ev, @function
+  12               	_ZN3canC2Ev:
+  13               	.LFB7:
+  14               		.file 1 "can.cpp"
+   1:can.cpp       **** /*
+   2:can.cpp       ****  * Ecole Polytechnique de Montreal
+   3:can.cpp       ****  * Departement de genie informatique
+   4:can.cpp       ****  * Cours inf1995
+   5:can.cpp       ****  *
+   6:can.cpp       ****  * Matthew Khouzam et Jerome Collin
+   7:can.cpp       ****  * 2005-2006
+   8:can.cpp       ****  *
+   9:can.cpp       ****  * Code qui n'est sous aucune license.
+  10:can.cpp       ****  *
+  11:can.cpp       ****  */
+  12:can.cpp       **** 
+  13:can.cpp       **** #include "can.h"
+  14:can.cpp       **** 
+  15:can.cpp       **** // constructeur: initialisation du convertisseur
+  16:can.cpp       **** can::can()
+  15               		.loc 1 16 0
+  16               		.cfi_startproc
+  17               	.LVL0:
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  22               	.LBB9:
+  17:can.cpp       **** {
+  18:can.cpp       ****    // ADC mux : reference analogique externe
+  19:can.cpp       ****    //           ajuste a droite
+  20:can.cpp       ****    ADMUX  = ( 0 << REFS1 ) | ( 0 << REFS0 ) | ( 0 << ADLAR ) | ( 0 << MUX4 ) |
+  21:can.cpp       ****             ( 0 << MUX3 ) | ( 0 << MUX2 ) | ( 0 << MUX1) | ( 0 << MUX0 ) ;
+  23               		.loc 1 21 0
+  24 0000 1092 7C00 		sts 124,__zero_reg__
+  22:can.cpp       **** 
+  23:can.cpp       ****    // ADC Status and Control Register A : 
+  24:can.cpp       ****    //  Active le convertisseur mais sans demarrer de conversion pour l'instant.
+  25:can.cpp       ****    //  Pas de declanchement automatique et aucune interruption suivant
+  26:can.cpp       ****    //  la fin d'une convertion. Division de l'horloge par 64 (il faudra
+  27:can.cpp       ****    //  donc 13 cycles du convertisseur * 64 pour terminer une conversion
+  28:can.cpp       ****    //  soit 832 cycles d'horloge soit 104 micro-secondes
+  29:can.cpp       ****    ADCSRA = ( 1 << ADEN ) | ( 0 << ADSC )  | ( 0 << ADATE ) | ( 0 << ADIF ) |
+  30:can.cpp       ****             ( 0 << ADIE ) | ( 1 << ADPS2 ) | ( 1 << ADPS1 ) | ( 0 << ADPS0 ) ;
+  25               		.loc 1 30 0
+  26 0004 86E8      		ldi r24,lo8(-122)
+  27               	.LVL1:
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 2
+
+
+  28 0006 8093 7A00 		sts 122,r24
+  29 000a 0895      		ret
+  30               	.LBE9:
+  31               		.cfi_endproc
+  32               	.LFE7:
+  33               		.size	_ZN3canC2Ev, .-_ZN3canC2Ev
+  34               	.global	_ZN3canC1Ev
+  35               		.set	_ZN3canC1Ev,_ZN3canC2Ev
+  36               	.global	_ZN3canD2Ev
+  37               		.type	_ZN3canD2Ev, @function
+  38               	_ZN3canD2Ev:
+  39               	.LFB10:
+  31:can.cpp       **** }
+  32:can.cpp       **** 
+  33:can.cpp       **** // Destructeur:  Arreter le convertisseur pour sauver sur la consommation.
+  34:can.cpp       **** can::~can()
+  40               		.loc 1 34 0
+  41               		.cfi_startproc
+  42               	.LVL2:
+  43               	/* prologue: function */
+  44               	/* frame size = 0 */
+  45               	/* stack size = 0 */
+  46               	.L__stack_usage = 0
+  47               	.LBB10:
+  35:can.cpp       **** {
+  36:can.cpp       ****    // rendre le convertisseur inactif.
+  37:can.cpp       ****    ADCSRA = 0 << ADEN ;
+  48               		.loc 1 37 0
+  49 000c 1092 7A00 		sts 122,__zero_reg__
+  50 0010 0895      		ret
+  51               	.LBE10:
+  52               		.cfi_endproc
+  53               	.LFE10:
+  54               		.size	_ZN3canD2Ev, .-_ZN3canD2Ev
+  55               	.global	_ZN3canD1Ev
+  56               		.set	_ZN3canD1Ev,_ZN3canD2Ev
+  57               	.global	_ZN3can7lectureEh
+  58               		.type	_ZN3can7lectureEh, @function
+  59               	_ZN3can7lectureEh:
+  60               	.LFB12:
+  38:can.cpp       **** }
+  39:can.cpp       **** 
+  40:can.cpp       **** // Faire une conversion et aller retourner le resultat sur 16 bits
+  41:can.cpp       **** // dont seulement les 10 de poids faibles sont significatifs.
+  42:can.cpp       **** uint16_t
+  43:can.cpp       **** can::lecture( uint8_t pos)
+  44:can.cpp       **** {
+  61               		.loc 1 44 0
+  62               		.cfi_startproc
+  63               	.LVL3:
+  64               	/* prologue: function */
+  65               	/* frame size = 0 */
+  66               	/* stack size = 0 */
+  67               	.L__stack_usage = 0
+  68               	.LBB11:
+  45:can.cpp       ****    uint16_t adcVal;
+  46:can.cpp       **** 
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 3
+
+
+  47:can.cpp       ****    // Garder les bits de ADMUX intacts, sauf les bit permettant 
+  48:can.cpp       ****    // la selection de l'entree
+  49:can.cpp       ****    ADMUX  &=  ~(( 1 << MUX4 ) | ( 1 << MUX3 ) | 
+  50:can.cpp       ****                 ( 1 << MUX2 ) | ( 1 << MUX1)  | ( 1 << MUX0 ));
+  69               		.loc 1 50 0
+  70 0012 8091 7C00 		lds r24,124
+  71               	.LVL4:
+  72 0016 807E      		andi r24,lo8(-32)
+  73 0018 8093 7C00 		sts 124,r24
+  51:can.cpp       **** 
+  52:can.cpp       ****    // selectionner l'entree voulue
+  53:can.cpp       ****    ADMUX |= ((pos & 0x07) << MUX0) ;
+  74               		.loc 1 53 0
+  75 001c 8091 7C00 		lds r24,124
+  76 0020 6770      		andi r22,lo8(7)
+  77               	.LVL5:
+  78 0022 682B      		or r22,r24
+  79 0024 6093 7C00 		sts 124,r22
+  54:can.cpp       **** 
+  55:can.cpp       ****    // demarrer la conversion
+  56:can.cpp       ****    ADCSRA |= ( 1 << ADSC );
+  80               		.loc 1 56 0
+  81 0028 8091 7A00 		lds r24,122
+  82 002c 8064      		ori r24,lo8(64)
+  83 002e 8093 7A00 		sts 122,r24
+  84               	.L4:
+  57:can.cpp       **** 
+  58:can.cpp       ****    // Attendre la fin de la conversion soit 13 cycles du convertisseur.
+  59:can.cpp       ****    while( ! (ADCSRA & ( 1 << ADIF ) ) );
+  85               		.loc 1 59 0 discriminator 1
+  86 0032 8091 7A00 		lds r24,122
+  87 0036 84FF      		sbrs r24,4
+  88 0038 00C0      		rjmp .L4
+  60:can.cpp       **** 
+  61:can.cpp       ****    // important: remettre le bit d'indication de fin de cycle a zero 
+  62:can.cpp       ****    // pour la prochaine conversion ce qui se fait en l'ajustant a un.
+  63:can.cpp       ****    ADCSRA |= (1 << ADIF);
+  89               		.loc 1 63 0
+  90 003a 8091 7A00 		lds r24,122
+  91 003e 8061      		ori r24,lo8(16)
+  92 0040 8093 7A00 		sts 122,r24
+  64:can.cpp       **** 
+  65:can.cpp       ****    // Aller chercher le resultat sur 16 bits.
+  66:can.cpp       ****    adcVal =   ADCL ;
+  93               		.loc 1 66 0
+  94 0044 2091 7800 		lds r18,120
+  95               	.LVL6:
+  67:can.cpp       ****    adcVal +=  ADCH << 8;
+  96               		.loc 1 67 0
+  97 0048 8091 7900 		lds r24,121
+  98               	.LVL7:
+  99 004c 90E0      		ldi r25,0
+ 100 004e 982F      		mov r25,r24
+ 101 0050 8827      		clr r24
+ 102               	.LVL8:
+ 103               	.LBE11:
+  68:can.cpp       **** 
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 4
+
+
+  69:can.cpp       ****    // resultat sur 16 bits
+  70:can.cpp       ****    return adcVal;
+  71:can.cpp       **** }
+ 104               		.loc 1 71 0
+ 105 0052 820F      		add r24,r18
+ 106 0054 911D      		adc r25,__zero_reg__
+ 107 0056 0895      		ret
+ 108               		.cfi_endproc
+ 109               	.LFE12:
+ 110               		.size	_ZN3can7lectureEh, .-_ZN3can7lectureEh
+ 111               	.global	_Z14initialisationv
+ 112               		.type	_Z14initialisationv, @function
+ 113               	_Z14initialisationv:
+ 114               	.LFB13:
+ 115               		.file 2 "TP7b.cpp"
+   1:TP7b.cpp      **** /* Fichier : TP7b.cpp
+   2:TP7b.cpp      ****  * Auteurs : Bruno Bousquet et Dominique Deschênes
+   3:TP7b.cpp      ****  * Date	   : 25 février 2016
+   4:TP7b.cpp      ****  * But     : Petit programme qui colore la DEL proportionellement à l'intensitée lumineuse 
+   5:TP7b.cpp      ****  * 		lue par le CAN.
+   6:TP7b.cpp      ****  
+   7:TP7b.cpp      **** -/!\- BRANCHEMENTS -/!\-
+   8:TP7b.cpp      ****  * Alimentation Breadboard : Fils rouge et noir sur VCC et GND.
+   9:TP7b.cpp      ****  * Connexion photoresistance : Fil bleu sur pin 1 du PORTA.
+  10:TP7b.cpp      ****  * Connexion DEL : (+) -> PORTC 1, (-) -> PORTC 2.
+  11:TP7b.cpp      ****  */
+  12:TP7b.cpp      **** 
+  13:TP7b.cpp      **** #include "tp.h"
+  14:TP7b.cpp      **** #include "can.cpp"
+  15:TP7b.cpp      **** 
+  16:TP7b.cpp      **** // Applique les bons paramètres aux ports I/O.
+  17:TP7b.cpp      **** void initialisation()
+  18:TP7b.cpp      **** {	
+ 116               		.loc 2 18 0
+ 117               		.cfi_startproc
+ 118               	/* prologue: function */
+ 119               	/* frame size = 0 */
+ 120               	/* stack size = 0 */
+ 121               	.L__stack_usage = 0
+  19:TP7b.cpp      **** 	DDRA = SORTIE; // On definit les ports A en sortie.
+ 122               		.loc 2 19 0
+ 123 0058 8FEF      		ldi r24,lo8(-1)
+ 124 005a 81B9      		out 0x1,r24
+  20:TP7b.cpp      **** 	DDRB = SORTIE; // On definit les ports B en sortie.
+ 125               		.loc 2 20 0
+ 126 005c 84B9      		out 0x4,r24
+  21:TP7b.cpp      **** 	DDRC = SORTIE; // On definit les ports C en sortie.
+ 127               		.loc 2 21 0
+ 128 005e 87B9      		out 0x7,r24
+  22:TP7b.cpp      **** 	DDRD = SORTIE; // On definit les ports D en sortie.
+ 129               		.loc 2 22 0
+ 130 0060 8AB9      		out 0xa,r24
+ 131 0062 0895      		ret
+ 132               		.cfi_endproc
+ 133               	.LFE13:
+ 134               		.size	_Z14initialisationv, .-_Z14initialisationv
+ 135               		.section	.text.startup,"ax",@progbits
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 5
+
+
+ 136               	.global	main
+ 137               		.type	main, @function
+ 138               	main:
+ 139               	.LFB14:
+  23:TP7b.cpp      **** }
+  24:TP7b.cpp      **** 
+  25:TP7b.cpp      **** int main()
+  26:TP7b.cpp      **** {
+ 140               		.loc 2 26 0
+ 141               		.cfi_startproc
+ 142 0000 CF93      		push r28
+ 143               	.LCFI0:
+ 144               		.cfi_def_cfa_offset 3
+ 145               		.cfi_offset 28, -2
+ 146 0002 DF93      		push r29
+ 147               	.LCFI1:
+ 148               		.cfi_def_cfa_offset 4
+ 149               		.cfi_offset 29, -3
+ 150 0004 1F92      		push __zero_reg__
+ 151               	.LCFI2:
+ 152               		.cfi_def_cfa_offset 5
+ 153 0006 CDB7      		in r28,__SP_L__
+ 154 0008 DEB7      		in r29,__SP_H__
+ 155               	.LCFI3:
+ 156               		.cfi_def_cfa_register 28
+ 157               	/* prologue: function */
+ 158               	/* frame size = 1 */
+ 159               	/* stack size = 3 */
+ 160               	.L__stack_usage = 3
+ 161               	.LVL9:
+ 162               	.LBB12:
+  27:TP7b.cpp      **** 	/* Valeur du décalage de la lecture du CAN pour amplifier le signal.
+  28:TP7b.cpp      **** 	 * Sinon la luminosité ambiante n'est pas assez pour faire une couleur
+  29:TP7b.cpp      **** 	 * ambrée.  */
+  30:TP7b.cpp      **** 	const uint8_t amplification = 5;
+  31:TP7b.cpp      **** 
+  32:TP7b.cpp      **** 	// Valeur où est stockée la lecture du CAN.
+  33:TP7b.cpp      **** 	uint8_t bronzage = 0;
+  34:TP7b.cpp      **** 	// Valeur du compteur pour la couleur.
+  35:TP7b.cpp      **** 	uint8_t compteur = 0;
+  36:TP7b.cpp      **** 	initialisation();
+ 163               		.loc 2 36 0
+ 164 000a 0E94 0000 		call _Z14initialisationv
+ 165               	.LVL10:
+ 166               	.LBB13:
+ 167               	.LBB14:
+  30:can.cpp       **** }
+ 168               		.loc 1 30 0
+ 169 000e 16E8      		ldi r17,lo8(-122)
+ 170               	.LBE14:
+ 171               	.LBE13:
+  37:TP7b.cpp      **** 	
+  38:TP7b.cpp      **** 	// On fait la boucle indéfiniment.
+  39:TP7b.cpp      **** 	for(;;)
+  40:TP7b.cpp      **** 	{
+  41:TP7b.cpp      **** 		// Effectue la lecture du CAN.
+  42:TP7b.cpp      **** 		bronzage = can().lecture(0) << (amplification - 2);
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 6
+
+
+  43:TP7b.cpp      **** 
+  44:TP7b.cpp      **** 		/* De 0 à bronzage, la DEL allume rouge : plus bronzage est grand, 
+  45:TP7b.cpp      **** 		 *	plus la lumière sera rouge longtemps.
+  46:TP7b.cpp      **** 		 * On remet le compteur = 0.  */
+  47:TP7b.cpp      **** 		for(compteur = 0; compteur < bronzage; compteur++)
+  48:TP7b.cpp      **** 			PORTC = ROUGE;
+ 172               		.loc 2 48 0
+ 173 0010 01E0      		ldi r16,lo8(1)
+  49:TP7b.cpp      **** 		
+  50:TP7b.cpp      **** 		/* De bronzage à valeur max, la DEL allume vert : plus bronzage 
+  51:TP7b.cpp      **** 		 *	est petit plus la lumière sera verte longtemps.  */
+  52:TP7b.cpp      **** 		for(; compteur < 0xff; compteur++)
+  53:TP7b.cpp      **** 			PORTC = VERT;
+ 174               		.loc 2 53 0
+ 175 0012 82E0      		ldi r24,lo8(2)
+ 176 0014 F82E      		mov r15,r24
+ 177               	.LVL11:
+ 178               	.L14:
+ 179               	.LBB16:
+ 180               	.LBB15:
+  21:can.cpp       **** 
+ 181               		.loc 1 21 0
+ 182 0016 1092 7C00 		sts 124,__zero_reg__
+  30:can.cpp       **** }
+ 183               		.loc 1 30 0
+ 184 001a 1093 7A00 		sts 122,r17
+ 185               	.LBE15:
+ 186               	.LBE16:
+  42:TP7b.cpp      **** 
+ 187               		.loc 2 42 0
+ 188 001e 60E0      		ldi r22,0
+ 189 0020 CE01      		movw r24,r28
+ 190 0022 0196      		adiw r24,1
+ 191 0024 0E94 0000 		call _ZN3can7lectureEh
+ 192               	.LVL12:
+ 193 0028 880F      		lsl r24
+ 194 002a 880F      		lsl r24
+ 195 002c 880F      		lsl r24
+ 196               	.LVL13:
+ 197               	.LBB17:
+ 198               	.LBB18:
+  37:can.cpp       **** }
+ 199               		.loc 1 37 0
+ 200 002e 1092 7A00 		sts 122,__zero_reg__
+ 201               	.LVL14:
+ 202               	.LBE18:
+ 203               	.LBE17:
+  47:TP7b.cpp      **** 			PORTC = ROUGE;
+ 204               		.loc 2 47 0
+ 205 0032 90E0      		ldi r25,0
+ 206               	.LVL15:
+ 207               	.L10:
+  47:TP7b.cpp      **** 			PORTC = ROUGE;
+ 208               		.loc 2 47 0 is_stmt 0 discriminator 1
+ 209 0034 9817      		cp r25,r24
+ 210 0036 01F0      		breq .L12
+  48:TP7b.cpp      **** 		
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 7
+
+
+ 211               		.loc 2 48 0 is_stmt 1 discriminator 3
+ 212 0038 08B9      		out 0x8,r16
+  47:TP7b.cpp      **** 			PORTC = ROUGE;
+ 213               		.loc 2 47 0 discriminator 3
+ 214 003a 9F5F      		subi r25,lo8(-(1))
+ 215               	.LVL16:
+ 216 003c 00C0      		rjmp .L10
+ 217               	.LVL17:
+ 218               	.L12:
+  52:TP7b.cpp      **** 			PORTC = VERT;
+ 219               		.loc 2 52 0 discriminator 1
+ 220 003e 8F3F      		cpi r24,lo8(-1)
+ 221 0040 01F0      		breq .L14
+ 222               		.loc 2 53 0 discriminator 2
+ 223 0042 F8B8      		out 0x8,r15
+  52:TP7b.cpp      **** 			PORTC = VERT;
+ 224               		.loc 2 52 0 discriminator 2
+ 225 0044 8F5F      		subi r24,lo8(-(1))
+ 226               	.LVL18:
+ 227 0046 00C0      		rjmp .L12
+ 228               	.LBE12:
+ 229               		.cfi_endproc
+ 230               	.LFE14:
+ 231               		.size	main, .-main
+ 232               		.text
+ 233               	.Letext0:
+ 234               		.file 3 "c:\\winavr-20100110\\avr\\include\\stdint.h"
+ 235               		.file 4 "can.h"
+ 236               		.section	.debug_info,"",@progbits
+ 237               	.Ldebug_info0:
+ 238 0000 9202 0000 		.long	0x292
+ 239 0004 0200      		.word	0x2
+ 240 0006 0000 0000 		.long	.Ldebug_abbrev0
+ 241 000a 04        		.byte	0x4
+ 242 000b 01        		.uleb128 0x1
+ 243 000c 0000 0000 		.long	.LASF18
+ 244 0010 04        		.byte	0x4
+ 245 0011 0000 0000 		.long	.LASF19
+ 246 0015 0000 0000 		.long	.LASF20
+ 247 0019 0000 0000 		.long	.Ldebug_ranges0+0x18
+ 248 001d 0000 0000 		.long	0
+ 249 0021 0000 0000 		.long	0
+ 250 0025 0000 0000 		.long	.Ldebug_line0
+ 251 0029 02        		.uleb128 0x2
+ 252 002a 01        		.byte	0x1
+ 253 002b 06        		.byte	0x6
+ 254 002c 0000 0000 		.long	.LASF0
+ 255 0030 03        		.uleb128 0x3
+ 256 0031 0000 0000 		.long	.LASF2
+ 257 0035 03        		.byte	0x3
+ 258 0036 7E        		.byte	0x7e
+ 259 0037 3B00 0000 		.long	0x3b
+ 260 003b 02        		.uleb128 0x2
+ 261 003c 01        		.byte	0x1
+ 262 003d 08        		.byte	0x8
+ 263 003e 0000 0000 		.long	.LASF1
+ 264 0042 04        		.uleb128 0x4
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 8
+
+
+ 265 0043 02        		.byte	0x2
+ 266 0044 05        		.byte	0x5
+ 267 0045 696E 7400 		.string	"int"
+ 268 0049 03        		.uleb128 0x3
+ 269 004a 0000 0000 		.long	.LASF3
+ 270 004e 03        		.byte	0x3
+ 271 004f 80        		.byte	0x80
+ 272 0050 5400 0000 		.long	0x54
+ 273 0054 02        		.uleb128 0x2
+ 274 0055 02        		.byte	0x2
+ 275 0056 07        		.byte	0x7
+ 276 0057 0000 0000 		.long	.LASF4
+ 277 005b 02        		.uleb128 0x2
+ 278 005c 04        		.byte	0x4
+ 279 005d 05        		.byte	0x5
+ 280 005e 0000 0000 		.long	.LASF5
+ 281 0062 02        		.uleb128 0x2
+ 282 0063 04        		.byte	0x4
+ 283 0064 07        		.byte	0x7
+ 284 0065 0000 0000 		.long	.LASF6
+ 285 0069 02        		.uleb128 0x2
+ 286 006a 08        		.byte	0x8
+ 287 006b 05        		.byte	0x5
+ 288 006c 0000 0000 		.long	.LASF7
+ 289 0070 02        		.uleb128 0x2
+ 290 0071 08        		.byte	0x8
+ 291 0072 07        		.byte	0x7
+ 292 0073 0000 0000 		.long	.LASF8
+ 293 0077 05        		.uleb128 0x5
+ 294 0078 6361 6E00 		.string	"can"
+ 295 007c 01        		.byte	0x1
+ 296 007d 04        		.byte	0x4
+ 297 007e 1D        		.byte	0x1d
+ 298 007f DB00 0000 		.long	0xdb
+ 299 0083 06        		.uleb128 0x6
+ 300 0084 01        		.byte	0x1
+ 301 0085 6361 6E00 		.string	"can"
+ 302 0089 04        		.byte	0x4
+ 303 008a 21        		.byte	0x21
+ 304 008b 01        		.byte	0x1
+ 305 008c 9400 0000 		.long	0x94
+ 306 0090 9B00 0000 		.long	0x9b
+ 307 0094 07        		.uleb128 0x7
+ 308 0095 DB00 0000 		.long	0xdb
+ 309 0099 01        		.byte	0x1
+ 310 009a 00        		.byte	0
+ 311 009b 08        		.uleb128 0x8
+ 312 009c 01        		.byte	0x1
+ 313 009d 0000 0000 		.long	.LASF9
+ 314 00a1 04        		.byte	0x4
+ 315 00a2 22        		.byte	0x22
+ 316 00a3 01        		.byte	0x1
+ 317 00a4 AC00 0000 		.long	0xac
+ 318 00a8 B900 0000 		.long	0xb9
+ 319 00ac 07        		.uleb128 0x7
+ 320 00ad DB00 0000 		.long	0xdb
+ 321 00b1 01        		.byte	0x1
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 9
+
+
+ 322 00b2 07        		.uleb128 0x7
+ 323 00b3 4200 0000 		.long	0x42
+ 324 00b7 01        		.byte	0x1
+ 325 00b8 00        		.byte	0
+ 326 00b9 09        		.uleb128 0x9
+ 327 00ba 01        		.byte	0x1
+ 328 00bb 0000 0000 		.long	.LASF21
+ 329 00bf 04        		.byte	0x4
+ 330 00c0 28        		.byte	0x28
+ 331 00c1 0000 0000 		.long	.LASF22
+ 332 00c5 4900 0000 		.long	0x49
+ 333 00c9 01        		.byte	0x1
+ 334 00ca CE00 0000 		.long	0xce
+ 335 00ce 07        		.uleb128 0x7
+ 336 00cf DB00 0000 		.long	0xdb
+ 337 00d3 01        		.byte	0x1
+ 338 00d4 0A        		.uleb128 0xa
+ 339 00d5 3000 0000 		.long	0x30
+ 340 00d9 00        		.byte	0
+ 341 00da 00        		.byte	0
+ 342 00db 0B        		.uleb128 0xb
+ 343 00dc 02        		.byte	0x2
+ 344 00dd 7700 0000 		.long	0x77
+ 345 00e1 0C        		.uleb128 0xc
+ 346 00e2 8300 0000 		.long	0x83
+ 347 00e6 01        		.byte	0x1
+ 348 00e7 10        		.byte	0x10
+ 349 00e8 01        		.byte	0x1
+ 350 00e9 F100 0000 		.long	0xf1
+ 351 00ed FC00 0000 		.long	0xfc
+ 352 00f1 0D        		.uleb128 0xd
+ 353 00f2 0000 0000 		.long	.LASF10
+ 354 00f6 FC00 0000 		.long	0xfc
+ 355 00fa 01        		.byte	0x1
+ 356 00fb 00        		.byte	0
+ 357 00fc 0E        		.uleb128 0xe
+ 358 00fd DB00 0000 		.long	0xdb
+ 359 0101 0F        		.uleb128 0xf
+ 360 0102 9B00 0000 		.long	0x9b
+ 361 0106 01        		.byte	0x1
+ 362 0107 01        		.byte	0x1
+ 363 0108 1001 0000 		.long	0x110
+ 364 010c 2501 0000 		.long	0x125
+ 365 0110 0D        		.uleb128 0xd
+ 366 0111 0000 0000 		.long	.LASF10
+ 367 0115 FC00 0000 		.long	0xfc
+ 368 0119 01        		.byte	0x1
+ 369 011a 0D        		.uleb128 0xd
+ 370 011b 0000 0000 		.long	.LASF11
+ 371 011f 2501 0000 		.long	0x125
+ 372 0123 01        		.byte	0x1
+ 373 0124 00        		.byte	0
+ 374 0125 0E        		.uleb128 0xe
+ 375 0126 4200 0000 		.long	0x42
+ 376 012a 10        		.uleb128 0x10
+ 377 012b E100 0000 		.long	0xe1
+ 378 012f 0000 0000 		.long	.LASF12
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 10
+
+
+ 379 0133 0000 0000 		.long	.LFB7
+ 380 0137 0000 0000 		.long	.LFE7
+ 381 013b 03        		.byte	0x3
+ 382 013c 92        		.byte	0x92
+ 383 013d 20        		.uleb128 0x20
+ 384 013e 02        		.sleb128 2
+ 385 013f 4801 0000 		.long	0x148
+ 386 0143 01        		.byte	0x1
+ 387 0144 5201 0000 		.long	0x152
+ 388 0148 11        		.uleb128 0x11
+ 389 0149 F100 0000 		.long	0xf1
+ 390 014d 0000 0000 		.long	.LLST0
+ 391 0151 00        		.byte	0
+ 392 0152 10        		.uleb128 0x10
+ 393 0153 0101 0000 		.long	0x101
+ 394 0157 0000 0000 		.long	.LASF13
+ 395 015b 0000 0000 		.long	.LFB10
+ 396 015f 0000 0000 		.long	.LFE10
+ 397 0163 03        		.byte	0x3
+ 398 0164 92        		.byte	0x92
+ 399 0165 20        		.uleb128 0x20
+ 400 0166 02        		.sleb128 2
+ 401 0167 7001 0000 		.long	0x170
+ 402 016b 01        		.byte	0x1
+ 403 016c 7D01 0000 		.long	0x17d
+ 404 0170 12        		.uleb128 0x12
+ 405 0171 1001 0000 		.long	0x110
+ 406 0175 06        		.byte	0x6
+ 407 0176 68        		.byte	0x68
+ 408 0177 93        		.byte	0x93
+ 409 0178 01        		.uleb128 0x1
+ 410 0179 69        		.byte	0x69
+ 411 017a 93        		.byte	0x93
+ 412 017b 01        		.uleb128 0x1
+ 413 017c 00        		.byte	0
+ 414 017d 13        		.uleb128 0x13
+ 415 017e B900 0000 		.long	0xb9
+ 416 0182 01        		.byte	0x1
+ 417 0183 2B        		.byte	0x2b
+ 418 0184 0000 0000 		.long	.LFB12
+ 419 0188 0000 0000 		.long	.LFE12
+ 420 018c 03        		.byte	0x3
+ 421 018d 92        		.byte	0x92
+ 422 018e 20        		.uleb128 0x20
+ 423 018f 02        		.sleb128 2
+ 424 0190 9901 0000 		.long	0x199
+ 425 0194 01        		.byte	0x1
+ 426 0195 D001 0000 		.long	0x1d0
+ 427 0199 14        		.uleb128 0x14
+ 428 019a 0000 0000 		.long	.LASF10
+ 429 019e FC00 0000 		.long	0xfc
+ 430 01a2 01        		.byte	0x1
+ 431 01a3 0000 0000 		.long	.LLST1
+ 432 01a7 15        		.uleb128 0x15
+ 433 01a8 706F 7300 		.string	"pos"
+ 434 01ac 01        		.byte	0x1
+ 435 01ad 2B        		.byte	0x2b
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 11
+
+
+ 436 01ae 3000 0000 		.long	0x30
+ 437 01b2 0000 0000 		.long	.LLST2
+ 438 01b6 16        		.uleb128 0x16
+ 439 01b7 0000 0000 		.long	.LBB11
+ 440 01bb 0000 0000 		.long	.LBE11
+ 441 01bf 17        		.uleb128 0x17
+ 442 01c0 0000 0000 		.long	.LASF14
+ 443 01c4 01        		.byte	0x1
+ 444 01c5 2D        		.byte	0x2d
+ 445 01c6 4900 0000 		.long	0x49
+ 446 01ca 0000 0000 		.long	.LLST3
+ 447 01ce 00        		.byte	0
+ 448 01cf 00        		.byte	0
+ 449 01d0 18        		.uleb128 0x18
+ 450 01d1 01        		.byte	0x1
+ 451 01d2 0000 0000 		.long	.LASF23
+ 452 01d6 02        		.byte	0x2
+ 453 01d7 11        		.byte	0x11
+ 454 01d8 0000 0000 		.long	.LASF24
+ 455 01dc 0000 0000 		.long	.LFB13
+ 456 01e0 0000 0000 		.long	.LFE13
+ 457 01e4 03        		.byte	0x3
+ 458 01e5 92        		.byte	0x92
+ 459 01e6 20        		.uleb128 0x20
+ 460 01e7 02        		.sleb128 2
+ 461 01e8 01        		.byte	0x1
+ 462 01e9 19        		.uleb128 0x19
+ 463 01ea 01        		.byte	0x1
+ 464 01eb 0000 0000 		.long	.LASF25
+ 465 01ef 02        		.byte	0x2
+ 466 01f0 19        		.byte	0x19
+ 467 01f1 4200 0000 		.long	0x42
+ 468 01f5 0000 0000 		.long	.LFB14
+ 469 01f9 0000 0000 		.long	.LFE14
+ 470 01fd 0000 0000 		.long	.LLST4
+ 471 0201 01        		.byte	0x1
+ 472 0202 9002 0000 		.long	0x290
+ 473 0206 16        		.uleb128 0x16
+ 474 0207 0000 0000 		.long	.LBB12
+ 475 020b 0000 0000 		.long	.LBE12
+ 476 020f 1A        		.uleb128 0x1a
+ 477 0210 0000 0000 		.long	.LASF15
+ 478 0214 02        		.byte	0x2
+ 479 0215 1E        		.byte	0x1e
+ 480 0216 9002 0000 		.long	0x290
+ 481 021a 05        		.byte	0x5
+ 482 021b 17        		.uleb128 0x17
+ 483 021c 0000 0000 		.long	.LASF16
+ 484 0220 02        		.byte	0x2
+ 485 0221 21        		.byte	0x21
+ 486 0222 3000 0000 		.long	0x30
+ 487 0226 0000 0000 		.long	.LLST5
+ 488 022a 17        		.uleb128 0x17
+ 489 022b 0000 0000 		.long	.LASF17
+ 490 022f 02        		.byte	0x2
+ 491 0230 23        		.byte	0x23
+ 492 0231 3000 0000 		.long	0x30
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 12
+
+
+ 493 0235 0000 0000 		.long	.LLST6
+ 494 0239 1B        		.uleb128 0x1b
+ 495 023a E100 0000 		.long	0xe1
+ 496 023e 0000 0000 		.long	.LBB13
+ 497 0242 0000 0000 		.long	.Ldebug_ranges0+0
+ 498 0246 02        		.byte	0x2
+ 499 0247 2A        		.byte	0x2a
+ 500 0248 5202 0000 		.long	0x252
+ 501 024c 1C        		.uleb128 0x1c
+ 502 024d F100 0000 		.long	0xf1
+ 503 0251 00        		.byte	0
+ 504 0252 1D        		.uleb128 0x1d
+ 505 0253 0101 0000 		.long	0x101
+ 506 0257 0000 0000 		.long	.LBB17
+ 507 025b 0000 0000 		.long	.LBE17
+ 508 025f 02        		.byte	0x2
+ 509 0260 2A        		.byte	0x2a
+ 510 0261 6B02 0000 		.long	0x26b
+ 511 0265 1C        		.uleb128 0x1c
+ 512 0266 1001 0000 		.long	0x110
+ 513 026a 00        		.byte	0
+ 514 026b 1E        		.uleb128 0x1e
+ 515 026c 0000 0000 		.long	.LVL10
+ 516 0270 D001 0000 		.long	0x1d0
+ 517 0274 1F        		.uleb128 0x1f
+ 518 0275 0000 0000 		.long	.LVL12
+ 519 0279 7D01 0000 		.long	0x17d
+ 520 027d 20        		.uleb128 0x20
+ 521 027e 06        		.byte	0x6
+ 522 027f 68        		.byte	0x68
+ 523 0280 93        		.byte	0x93
+ 524 0281 01        		.uleb128 0x1
+ 525 0282 69        		.byte	0x69
+ 526 0283 93        		.byte	0x93
+ 527 0284 01        		.uleb128 0x1
+ 528 0285 02        		.byte	0x2
+ 529 0286 8C        		.byte	0x8c
+ 530 0287 01        		.sleb128 1
+ 531 0288 20        		.uleb128 0x20
+ 532 0289 01        		.byte	0x1
+ 533 028a 66        		.byte	0x66
+ 534 028b 01        		.byte	0x1
+ 535 028c 30        		.byte	0x30
+ 536 028d 00        		.byte	0
+ 537 028e 00        		.byte	0
+ 538 028f 00        		.byte	0
+ 539 0290 0E        		.uleb128 0xe
+ 540 0291 3000 0000 		.long	0x30
+ 541 0295 00        		.byte	0
+ 542               		.section	.debug_abbrev,"",@progbits
+ 543               	.Ldebug_abbrev0:
+ 544 0000 01        		.uleb128 0x1
+ 545 0001 11        		.uleb128 0x11
+ 546 0002 01        		.byte	0x1
+ 547 0003 25        		.uleb128 0x25
+ 548 0004 0E        		.uleb128 0xe
+ 549 0005 13        		.uleb128 0x13
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 13
+
+
+ 550 0006 0B        		.uleb128 0xb
+ 551 0007 03        		.uleb128 0x3
+ 552 0008 0E        		.uleb128 0xe
+ 553 0009 1B        		.uleb128 0x1b
+ 554 000a 0E        		.uleb128 0xe
+ 555 000b 55        		.uleb128 0x55
+ 556 000c 06        		.uleb128 0x6
+ 557 000d 11        		.uleb128 0x11
+ 558 000e 01        		.uleb128 0x1
+ 559 000f 52        		.uleb128 0x52
+ 560 0010 01        		.uleb128 0x1
+ 561 0011 10        		.uleb128 0x10
+ 562 0012 06        		.uleb128 0x6
+ 563 0013 00        		.byte	0
+ 564 0014 00        		.byte	0
+ 565 0015 02        		.uleb128 0x2
+ 566 0016 24        		.uleb128 0x24
+ 567 0017 00        		.byte	0
+ 568 0018 0B        		.uleb128 0xb
+ 569 0019 0B        		.uleb128 0xb
+ 570 001a 3E        		.uleb128 0x3e
+ 571 001b 0B        		.uleb128 0xb
+ 572 001c 03        		.uleb128 0x3
+ 573 001d 0E        		.uleb128 0xe
+ 574 001e 00        		.byte	0
+ 575 001f 00        		.byte	0
+ 576 0020 03        		.uleb128 0x3
+ 577 0021 16        		.uleb128 0x16
+ 578 0022 00        		.byte	0
+ 579 0023 03        		.uleb128 0x3
+ 580 0024 0E        		.uleb128 0xe
+ 581 0025 3A        		.uleb128 0x3a
+ 582 0026 0B        		.uleb128 0xb
+ 583 0027 3B        		.uleb128 0x3b
+ 584 0028 0B        		.uleb128 0xb
+ 585 0029 49        		.uleb128 0x49
+ 586 002a 13        		.uleb128 0x13
+ 587 002b 00        		.byte	0
+ 588 002c 00        		.byte	0
+ 589 002d 04        		.uleb128 0x4
+ 590 002e 24        		.uleb128 0x24
+ 591 002f 00        		.byte	0
+ 592 0030 0B        		.uleb128 0xb
+ 593 0031 0B        		.uleb128 0xb
+ 594 0032 3E        		.uleb128 0x3e
+ 595 0033 0B        		.uleb128 0xb
+ 596 0034 03        		.uleb128 0x3
+ 597 0035 08        		.uleb128 0x8
+ 598 0036 00        		.byte	0
+ 599 0037 00        		.byte	0
+ 600 0038 05        		.uleb128 0x5
+ 601 0039 02        		.uleb128 0x2
+ 602 003a 01        		.byte	0x1
+ 603 003b 03        		.uleb128 0x3
+ 604 003c 08        		.uleb128 0x8
+ 605 003d 0B        		.uleb128 0xb
+ 606 003e 0B        		.uleb128 0xb
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 14
+
+
+ 607 003f 3A        		.uleb128 0x3a
+ 608 0040 0B        		.uleb128 0xb
+ 609 0041 3B        		.uleb128 0x3b
+ 610 0042 0B        		.uleb128 0xb
+ 611 0043 01        		.uleb128 0x1
+ 612 0044 13        		.uleb128 0x13
+ 613 0045 00        		.byte	0
+ 614 0046 00        		.byte	0
+ 615 0047 06        		.uleb128 0x6
+ 616 0048 2E        		.uleb128 0x2e
+ 617 0049 01        		.byte	0x1
+ 618 004a 3F        		.uleb128 0x3f
+ 619 004b 0C        		.uleb128 0xc
+ 620 004c 03        		.uleb128 0x3
+ 621 004d 08        		.uleb128 0x8
+ 622 004e 3A        		.uleb128 0x3a
+ 623 004f 0B        		.uleb128 0xb
+ 624 0050 3B        		.uleb128 0x3b
+ 625 0051 0B        		.uleb128 0xb
+ 626 0052 3C        		.uleb128 0x3c
+ 627 0053 0C        		.uleb128 0xc
+ 628 0054 64        		.uleb128 0x64
+ 629 0055 13        		.uleb128 0x13
+ 630 0056 01        		.uleb128 0x1
+ 631 0057 13        		.uleb128 0x13
+ 632 0058 00        		.byte	0
+ 633 0059 00        		.byte	0
+ 634 005a 07        		.uleb128 0x7
+ 635 005b 05        		.uleb128 0x5
+ 636 005c 00        		.byte	0
+ 637 005d 49        		.uleb128 0x49
+ 638 005e 13        		.uleb128 0x13
+ 639 005f 34        		.uleb128 0x34
+ 640 0060 0C        		.uleb128 0xc
+ 641 0061 00        		.byte	0
+ 642 0062 00        		.byte	0
+ 643 0063 08        		.uleb128 0x8
+ 644 0064 2E        		.uleb128 0x2e
+ 645 0065 01        		.byte	0x1
+ 646 0066 3F        		.uleb128 0x3f
+ 647 0067 0C        		.uleb128 0xc
+ 648 0068 03        		.uleb128 0x3
+ 649 0069 0E        		.uleb128 0xe
+ 650 006a 3A        		.uleb128 0x3a
+ 651 006b 0B        		.uleb128 0xb
+ 652 006c 3B        		.uleb128 0x3b
+ 653 006d 0B        		.uleb128 0xb
+ 654 006e 3C        		.uleb128 0x3c
+ 655 006f 0C        		.uleb128 0xc
+ 656 0070 64        		.uleb128 0x64
+ 657 0071 13        		.uleb128 0x13
+ 658 0072 01        		.uleb128 0x1
+ 659 0073 13        		.uleb128 0x13
+ 660 0074 00        		.byte	0
+ 661 0075 00        		.byte	0
+ 662 0076 09        		.uleb128 0x9
+ 663 0077 2E        		.uleb128 0x2e
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 15
+
+
+ 664 0078 01        		.byte	0x1
+ 665 0079 3F        		.uleb128 0x3f
+ 666 007a 0C        		.uleb128 0xc
+ 667 007b 03        		.uleb128 0x3
+ 668 007c 0E        		.uleb128 0xe
+ 669 007d 3A        		.uleb128 0x3a
+ 670 007e 0B        		.uleb128 0xb
+ 671 007f 3B        		.uleb128 0x3b
+ 672 0080 0B        		.uleb128 0xb
+ 673 0081 8740      		.uleb128 0x2007
+ 674 0083 0E        		.uleb128 0xe
+ 675 0084 49        		.uleb128 0x49
+ 676 0085 13        		.uleb128 0x13
+ 677 0086 3C        		.uleb128 0x3c
+ 678 0087 0C        		.uleb128 0xc
+ 679 0088 64        		.uleb128 0x64
+ 680 0089 13        		.uleb128 0x13
+ 681 008a 00        		.byte	0
+ 682 008b 00        		.byte	0
+ 683 008c 0A        		.uleb128 0xa
+ 684 008d 05        		.uleb128 0x5
+ 685 008e 00        		.byte	0
+ 686 008f 49        		.uleb128 0x49
+ 687 0090 13        		.uleb128 0x13
+ 688 0091 00        		.byte	0
+ 689 0092 00        		.byte	0
+ 690 0093 0B        		.uleb128 0xb
+ 691 0094 0F        		.uleb128 0xf
+ 692 0095 00        		.byte	0
+ 693 0096 0B        		.uleb128 0xb
+ 694 0097 0B        		.uleb128 0xb
+ 695 0098 49        		.uleb128 0x49
+ 696 0099 13        		.uleb128 0x13
+ 697 009a 00        		.byte	0
+ 698 009b 00        		.byte	0
+ 699 009c 0C        		.uleb128 0xc
+ 700 009d 2E        		.uleb128 0x2e
+ 701 009e 01        		.byte	0x1
+ 702 009f 47        		.uleb128 0x47
+ 703 00a0 13        		.uleb128 0x13
+ 704 00a1 3A        		.uleb128 0x3a
+ 705 00a2 0B        		.uleb128 0xb
+ 706 00a3 3B        		.uleb128 0x3b
+ 707 00a4 0B        		.uleb128 0xb
+ 708 00a5 20        		.uleb128 0x20
+ 709 00a6 0B        		.uleb128 0xb
+ 710 00a7 64        		.uleb128 0x64
+ 711 00a8 13        		.uleb128 0x13
+ 712 00a9 01        		.uleb128 0x1
+ 713 00aa 13        		.uleb128 0x13
+ 714 00ab 00        		.byte	0
+ 715 00ac 00        		.byte	0
+ 716 00ad 0D        		.uleb128 0xd
+ 717 00ae 05        		.uleb128 0x5
+ 718 00af 00        		.byte	0
+ 719 00b0 03        		.uleb128 0x3
+ 720 00b1 0E        		.uleb128 0xe
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 16
+
+
+ 721 00b2 49        		.uleb128 0x49
+ 722 00b3 13        		.uleb128 0x13
+ 723 00b4 34        		.uleb128 0x34
+ 724 00b5 0C        		.uleb128 0xc
+ 725 00b6 00        		.byte	0
+ 726 00b7 00        		.byte	0
+ 727 00b8 0E        		.uleb128 0xe
+ 728 00b9 26        		.uleb128 0x26
+ 729 00ba 00        		.byte	0
+ 730 00bb 49        		.uleb128 0x49
+ 731 00bc 13        		.uleb128 0x13
+ 732 00bd 00        		.byte	0
+ 733 00be 00        		.byte	0
+ 734 00bf 0F        		.uleb128 0xf
+ 735 00c0 2E        		.uleb128 0x2e
+ 736 00c1 01        		.byte	0x1
+ 737 00c2 47        		.uleb128 0x47
+ 738 00c3 13        		.uleb128 0x13
+ 739 00c4 3A        		.uleb128 0x3a
+ 740 00c5 0B        		.uleb128 0xb
+ 741 00c6 20        		.uleb128 0x20
+ 742 00c7 0B        		.uleb128 0xb
+ 743 00c8 64        		.uleb128 0x64
+ 744 00c9 13        		.uleb128 0x13
+ 745 00ca 01        		.uleb128 0x1
+ 746 00cb 13        		.uleb128 0x13
+ 747 00cc 00        		.byte	0
+ 748 00cd 00        		.byte	0
+ 749 00ce 10        		.uleb128 0x10
+ 750 00cf 2E        		.uleb128 0x2e
+ 751 00d0 01        		.byte	0x1
+ 752 00d1 31        		.uleb128 0x31
+ 753 00d2 13        		.uleb128 0x13
+ 754 00d3 8740      		.uleb128 0x2007
+ 755 00d5 0E        		.uleb128 0xe
+ 756 00d6 11        		.uleb128 0x11
+ 757 00d7 01        		.uleb128 0x1
+ 758 00d8 12        		.uleb128 0x12
+ 759 00d9 01        		.uleb128 0x1
+ 760 00da 40        		.uleb128 0x40
+ 761 00db 0A        		.uleb128 0xa
+ 762 00dc 64        		.uleb128 0x64
+ 763 00dd 13        		.uleb128 0x13
+ 764 00de 9742      		.uleb128 0x2117
+ 765 00e0 0C        		.uleb128 0xc
+ 766 00e1 01        		.uleb128 0x1
+ 767 00e2 13        		.uleb128 0x13
+ 768 00e3 00        		.byte	0
+ 769 00e4 00        		.byte	0
+ 770 00e5 11        		.uleb128 0x11
+ 771 00e6 05        		.uleb128 0x5
+ 772 00e7 00        		.byte	0
+ 773 00e8 31        		.uleb128 0x31
+ 774 00e9 13        		.uleb128 0x13
+ 775 00ea 02        		.uleb128 0x2
+ 776 00eb 06        		.uleb128 0x6
+ 777 00ec 00        		.byte	0
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 17
+
+
+ 778 00ed 00        		.byte	0
+ 779 00ee 12        		.uleb128 0x12
+ 780 00ef 05        		.uleb128 0x5
+ 781 00f0 00        		.byte	0
+ 782 00f1 31        		.uleb128 0x31
+ 783 00f2 13        		.uleb128 0x13
+ 784 00f3 02        		.uleb128 0x2
+ 785 00f4 0A        		.uleb128 0xa
+ 786 00f5 00        		.byte	0
+ 787 00f6 00        		.byte	0
+ 788 00f7 13        		.uleb128 0x13
+ 789 00f8 2E        		.uleb128 0x2e
+ 790 00f9 01        		.byte	0x1
+ 791 00fa 47        		.uleb128 0x47
+ 792 00fb 13        		.uleb128 0x13
+ 793 00fc 3A        		.uleb128 0x3a
+ 794 00fd 0B        		.uleb128 0xb
+ 795 00fe 3B        		.uleb128 0x3b
+ 796 00ff 0B        		.uleb128 0xb
+ 797 0100 11        		.uleb128 0x11
+ 798 0101 01        		.uleb128 0x1
+ 799 0102 12        		.uleb128 0x12
+ 800 0103 01        		.uleb128 0x1
+ 801 0104 40        		.uleb128 0x40
+ 802 0105 0A        		.uleb128 0xa
+ 803 0106 64        		.uleb128 0x64
+ 804 0107 13        		.uleb128 0x13
+ 805 0108 9742      		.uleb128 0x2117
+ 806 010a 0C        		.uleb128 0xc
+ 807 010b 01        		.uleb128 0x1
+ 808 010c 13        		.uleb128 0x13
+ 809 010d 00        		.byte	0
+ 810 010e 00        		.byte	0
+ 811 010f 14        		.uleb128 0x14
+ 812 0110 05        		.uleb128 0x5
+ 813 0111 00        		.byte	0
+ 814 0112 03        		.uleb128 0x3
+ 815 0113 0E        		.uleb128 0xe
+ 816 0114 49        		.uleb128 0x49
+ 817 0115 13        		.uleb128 0x13
+ 818 0116 34        		.uleb128 0x34
+ 819 0117 0C        		.uleb128 0xc
+ 820 0118 02        		.uleb128 0x2
+ 821 0119 06        		.uleb128 0x6
+ 822 011a 00        		.byte	0
+ 823 011b 00        		.byte	0
+ 824 011c 15        		.uleb128 0x15
+ 825 011d 05        		.uleb128 0x5
+ 826 011e 00        		.byte	0
+ 827 011f 03        		.uleb128 0x3
+ 828 0120 08        		.uleb128 0x8
+ 829 0121 3A        		.uleb128 0x3a
+ 830 0122 0B        		.uleb128 0xb
+ 831 0123 3B        		.uleb128 0x3b
+ 832 0124 0B        		.uleb128 0xb
+ 833 0125 49        		.uleb128 0x49
+ 834 0126 13        		.uleb128 0x13
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 18
+
+
+ 835 0127 02        		.uleb128 0x2
+ 836 0128 06        		.uleb128 0x6
+ 837 0129 00        		.byte	0
+ 838 012a 00        		.byte	0
+ 839 012b 16        		.uleb128 0x16
+ 840 012c 0B        		.uleb128 0xb
+ 841 012d 01        		.byte	0x1
+ 842 012e 11        		.uleb128 0x11
+ 843 012f 01        		.uleb128 0x1
+ 844 0130 12        		.uleb128 0x12
+ 845 0131 01        		.uleb128 0x1
+ 846 0132 00        		.byte	0
+ 847 0133 00        		.byte	0
+ 848 0134 17        		.uleb128 0x17
+ 849 0135 34        		.uleb128 0x34
+ 850 0136 00        		.byte	0
+ 851 0137 03        		.uleb128 0x3
+ 852 0138 0E        		.uleb128 0xe
+ 853 0139 3A        		.uleb128 0x3a
+ 854 013a 0B        		.uleb128 0xb
+ 855 013b 3B        		.uleb128 0x3b
+ 856 013c 0B        		.uleb128 0xb
+ 857 013d 49        		.uleb128 0x49
+ 858 013e 13        		.uleb128 0x13
+ 859 013f 02        		.uleb128 0x2
+ 860 0140 06        		.uleb128 0x6
+ 861 0141 00        		.byte	0
+ 862 0142 00        		.byte	0
+ 863 0143 18        		.uleb128 0x18
+ 864 0144 2E        		.uleb128 0x2e
+ 865 0145 00        		.byte	0
+ 866 0146 3F        		.uleb128 0x3f
+ 867 0147 0C        		.uleb128 0xc
+ 868 0148 03        		.uleb128 0x3
+ 869 0149 0E        		.uleb128 0xe
+ 870 014a 3A        		.uleb128 0x3a
+ 871 014b 0B        		.uleb128 0xb
+ 872 014c 3B        		.uleb128 0x3b
+ 873 014d 0B        		.uleb128 0xb
+ 874 014e 8740      		.uleb128 0x2007
+ 875 0150 0E        		.uleb128 0xe
+ 876 0151 11        		.uleb128 0x11
+ 877 0152 01        		.uleb128 0x1
+ 878 0153 12        		.uleb128 0x12
+ 879 0154 01        		.uleb128 0x1
+ 880 0155 40        		.uleb128 0x40
+ 881 0156 0A        		.uleb128 0xa
+ 882 0157 9742      		.uleb128 0x2117
+ 883 0159 0C        		.uleb128 0xc
+ 884 015a 00        		.byte	0
+ 885 015b 00        		.byte	0
+ 886 015c 19        		.uleb128 0x19
+ 887 015d 2E        		.uleb128 0x2e
+ 888 015e 01        		.byte	0x1
+ 889 015f 3F        		.uleb128 0x3f
+ 890 0160 0C        		.uleb128 0xc
+ 891 0161 03        		.uleb128 0x3
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 19
+
+
+ 892 0162 0E        		.uleb128 0xe
+ 893 0163 3A        		.uleb128 0x3a
+ 894 0164 0B        		.uleb128 0xb
+ 895 0165 3B        		.uleb128 0x3b
+ 896 0166 0B        		.uleb128 0xb
+ 897 0167 49        		.uleb128 0x49
+ 898 0168 13        		.uleb128 0x13
+ 899 0169 11        		.uleb128 0x11
+ 900 016a 01        		.uleb128 0x1
+ 901 016b 12        		.uleb128 0x12
+ 902 016c 01        		.uleb128 0x1
+ 903 016d 40        		.uleb128 0x40
+ 904 016e 06        		.uleb128 0x6
+ 905 016f 9742      		.uleb128 0x2117
+ 906 0171 0C        		.uleb128 0xc
+ 907 0172 01        		.uleb128 0x1
+ 908 0173 13        		.uleb128 0x13
+ 909 0174 00        		.byte	0
+ 910 0175 00        		.byte	0
+ 911 0176 1A        		.uleb128 0x1a
+ 912 0177 34        		.uleb128 0x34
+ 913 0178 00        		.byte	0
+ 914 0179 03        		.uleb128 0x3
+ 915 017a 0E        		.uleb128 0xe
+ 916 017b 3A        		.uleb128 0x3a
+ 917 017c 0B        		.uleb128 0xb
+ 918 017d 3B        		.uleb128 0x3b
+ 919 017e 0B        		.uleb128 0xb
+ 920 017f 49        		.uleb128 0x49
+ 921 0180 13        		.uleb128 0x13
+ 922 0181 1C        		.uleb128 0x1c
+ 923 0182 0B        		.uleb128 0xb
+ 924 0183 00        		.byte	0
+ 925 0184 00        		.byte	0
+ 926 0185 1B        		.uleb128 0x1b
+ 927 0186 1D        		.uleb128 0x1d
+ 928 0187 01        		.byte	0x1
+ 929 0188 31        		.uleb128 0x31
+ 930 0189 13        		.uleb128 0x13
+ 931 018a 52        		.uleb128 0x52
+ 932 018b 01        		.uleb128 0x1
+ 933 018c 55        		.uleb128 0x55
+ 934 018d 06        		.uleb128 0x6
+ 935 018e 58        		.uleb128 0x58
+ 936 018f 0B        		.uleb128 0xb
+ 937 0190 59        		.uleb128 0x59
+ 938 0191 0B        		.uleb128 0xb
+ 939 0192 01        		.uleb128 0x1
+ 940 0193 13        		.uleb128 0x13
+ 941 0194 00        		.byte	0
+ 942 0195 00        		.byte	0
+ 943 0196 1C        		.uleb128 0x1c
+ 944 0197 05        		.uleb128 0x5
+ 945 0198 00        		.byte	0
+ 946 0199 31        		.uleb128 0x31
+ 947 019a 13        		.uleb128 0x13
+ 948 019b 00        		.byte	0
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 20
+
+
+ 949 019c 00        		.byte	0
+ 950 019d 1D        		.uleb128 0x1d
+ 951 019e 1D        		.uleb128 0x1d
+ 952 019f 01        		.byte	0x1
+ 953 01a0 31        		.uleb128 0x31
+ 954 01a1 13        		.uleb128 0x13
+ 955 01a2 11        		.uleb128 0x11
+ 956 01a3 01        		.uleb128 0x1
+ 957 01a4 12        		.uleb128 0x12
+ 958 01a5 01        		.uleb128 0x1
+ 959 01a6 58        		.uleb128 0x58
+ 960 01a7 0B        		.uleb128 0xb
+ 961 01a8 59        		.uleb128 0x59
+ 962 01a9 0B        		.uleb128 0xb
+ 963 01aa 01        		.uleb128 0x1
+ 964 01ab 13        		.uleb128 0x13
+ 965 01ac 00        		.byte	0
+ 966 01ad 00        		.byte	0
+ 967 01ae 1E        		.uleb128 0x1e
+ 968 01af 8982 01   		.uleb128 0x4109
+ 969 01b2 00        		.byte	0
+ 970 01b3 11        		.uleb128 0x11
+ 971 01b4 01        		.uleb128 0x1
+ 972 01b5 31        		.uleb128 0x31
+ 973 01b6 13        		.uleb128 0x13
+ 974 01b7 00        		.byte	0
+ 975 01b8 00        		.byte	0
+ 976 01b9 1F        		.uleb128 0x1f
+ 977 01ba 8982 01   		.uleb128 0x4109
+ 978 01bd 01        		.byte	0x1
+ 979 01be 11        		.uleb128 0x11
+ 980 01bf 01        		.uleb128 0x1
+ 981 01c0 31        		.uleb128 0x31
+ 982 01c1 13        		.uleb128 0x13
+ 983 01c2 00        		.byte	0
+ 984 01c3 00        		.byte	0
+ 985 01c4 20        		.uleb128 0x20
+ 986 01c5 8A82 01   		.uleb128 0x410a
+ 987 01c8 00        		.byte	0
+ 988 01c9 02        		.uleb128 0x2
+ 989 01ca 0A        		.uleb128 0xa
+ 990 01cb 9142      		.uleb128 0x2111
+ 991 01cd 0A        		.uleb128 0xa
+ 992 01ce 00        		.byte	0
+ 993 01cf 00        		.byte	0
+ 994 01d0 00        		.byte	0
+ 995               		.section	.debug_loc,"",@progbits
+ 996               	.Ldebug_loc0:
+ 997               	.LLST0:
+ 998 0000 0000 0000 		.long	.LVL0
+ 999 0004 0000 0000 		.long	.LVL1
+ 1000 0008 0600      		.word	0x6
+ 1001 000a 68        		.byte	0x68
+ 1002 000b 93        		.byte	0x93
+ 1003 000c 01        		.uleb128 0x1
+ 1004 000d 69        		.byte	0x69
+ 1005 000e 93        		.byte	0x93
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 21
+
+
+ 1006 000f 01        		.uleb128 0x1
+ 1007 0010 0000 0000 		.long	.LVL1
+ 1008 0014 0000 0000 		.long	.LFE7
+ 1009 0018 0400      		.word	0x4
+ 1010 001a F3        		.byte	0xf3
+ 1011 001b 01        		.uleb128 0x1
+ 1012 001c 68        		.byte	0x68
+ 1013 001d 9F        		.byte	0x9f
+ 1014 001e 0000 0000 		.long	0
+ 1015 0022 0000 0000 		.long	0
+ 1016               	.LLST1:
+ 1017 0026 0000 0000 		.long	.LVL3
+ 1018 002a 0000 0000 		.long	.LVL4
+ 1019 002e 0600      		.word	0x6
+ 1020 0030 68        		.byte	0x68
+ 1021 0031 93        		.byte	0x93
+ 1022 0032 01        		.uleb128 0x1
+ 1023 0033 69        		.byte	0x69
+ 1024 0034 93        		.byte	0x93
+ 1025 0035 01        		.uleb128 0x1
+ 1026 0036 0000 0000 		.long	.LVL4
+ 1027 003a 0000 0000 		.long	.LFE12
+ 1028 003e 0400      		.word	0x4
+ 1029 0040 F3        		.byte	0xf3
+ 1030 0041 01        		.uleb128 0x1
+ 1031 0042 68        		.byte	0x68
+ 1032 0043 9F        		.byte	0x9f
+ 1033 0044 0000 0000 		.long	0
+ 1034 0048 0000 0000 		.long	0
+ 1035               	.LLST2:
+ 1036 004c 0000 0000 		.long	.LVL3
+ 1037 0050 0000 0000 		.long	.LVL5
+ 1038 0054 0100      		.word	0x1
+ 1039 0056 66        		.byte	0x66
+ 1040 0057 0000 0000 		.long	.LVL5
+ 1041 005b 0000 0000 		.long	.LFE12
+ 1042 005f 0400      		.word	0x4
+ 1043 0061 F3        		.byte	0xf3
+ 1044 0062 01        		.uleb128 0x1
+ 1045 0063 66        		.byte	0x66
+ 1046 0064 9F        		.byte	0x9f
+ 1047 0065 0000 0000 		.long	0
+ 1048 0069 0000 0000 		.long	0
+ 1049               	.LLST3:
+ 1050 006d 0000 0000 		.long	.LVL6
+ 1051 0071 0000 0000 		.long	.LVL7
+ 1052 0075 0600      		.word	0x6
+ 1053 0077 82        		.byte	0x82
+ 1054 0078 00        		.sleb128 0
+ 1055 0079 08        		.byte	0x8
+ 1056 007a FF        		.byte	0xff
+ 1057 007b 1A        		.byte	0x1a
+ 1058 007c 9F        		.byte	0x9f
+ 1059 007d 0000 0000 		.long	.LVL7
+ 1060 0081 0000 0000 		.long	.LVL8
+ 1061 0085 0E00      		.word	0xe
+ 1062 0087 88        		.byte	0x88
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 22
+
+
+ 1063 0088 00        		.sleb128 0
+ 1064 0089 08        		.byte	0x8
+ 1065 008a FF        		.byte	0xff
+ 1066 008b 1A        		.byte	0x1a
+ 1067 008c 38        		.byte	0x38
+ 1068 008d 24        		.byte	0x24
+ 1069 008e 82        		.byte	0x82
+ 1070 008f 00        		.sleb128 0
+ 1071 0090 08        		.byte	0x8
+ 1072 0091 FF        		.byte	0xff
+ 1073 0092 1A        		.byte	0x1a
+ 1074 0093 22        		.byte	0x22
+ 1075 0094 9F        		.byte	0x9f
+ 1076 0095 0000 0000 		.long	0
+ 1077 0099 0000 0000 		.long	0
+ 1078               	.LLST4:
+ 1079 009d 0000 0000 		.long	.LFB14
+ 1080 00a1 0000 0000 		.long	.LCFI0
+ 1081 00a5 0300      		.word	0x3
+ 1082 00a7 92        		.byte	0x92
+ 1083 00a8 20        		.uleb128 0x20
+ 1084 00a9 02        		.sleb128 2
+ 1085 00aa 0000 0000 		.long	.LCFI0
+ 1086 00ae 0000 0000 		.long	.LCFI1
+ 1087 00b2 0300      		.word	0x3
+ 1088 00b4 92        		.byte	0x92
+ 1089 00b5 20        		.uleb128 0x20
+ 1090 00b6 03        		.sleb128 3
+ 1091 00b7 0000 0000 		.long	.LCFI1
+ 1092 00bb 0000 0000 		.long	.LCFI2
+ 1093 00bf 0300      		.word	0x3
+ 1094 00c1 92        		.byte	0x92
+ 1095 00c2 20        		.uleb128 0x20
+ 1096 00c3 04        		.sleb128 4
+ 1097 00c4 0000 0000 		.long	.LCFI2
+ 1098 00c8 0000 0000 		.long	.LCFI3
+ 1099 00cc 0300      		.word	0x3
+ 1100 00ce 92        		.byte	0x92
+ 1101 00cf 20        		.uleb128 0x20
+ 1102 00d0 05        		.sleb128 5
+ 1103 00d1 0000 0000 		.long	.LCFI3
+ 1104 00d5 0000 0000 		.long	.LFE14
+ 1105 00d9 0200      		.word	0x2
+ 1106 00db 8C        		.byte	0x8c
+ 1107 00dc 05        		.sleb128 5
+ 1108 00dd 0000 0000 		.long	0
+ 1109 00e1 0000 0000 		.long	0
+ 1110               	.LLST5:
+ 1111 00e5 0000 0000 		.long	.LVL9
+ 1112 00e9 0000 0000 		.long	.LVL11
+ 1113 00ed 0200      		.word	0x2
+ 1114 00ef 30        		.byte	0x30
+ 1115 00f0 9F        		.byte	0x9f
+ 1116 00f1 0000 0000 		.long	.LVL13
+ 1117 00f5 0000 0000 		.long	.LVL17
+ 1118 00f9 0100      		.word	0x1
+ 1119 00fb 68        		.byte	0x68
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 23
+
+
+ 1120 00fc 0000 0000 		.long	0
+ 1121 0100 0000 0000 		.long	0
+ 1122               	.LLST6:
+ 1123 0104 0000 0000 		.long	.LVL9
+ 1124 0108 0000 0000 		.long	.LVL11
+ 1125 010c 0200      		.word	0x2
+ 1126 010e 30        		.byte	0x30
+ 1127 010f 9F        		.byte	0x9f
+ 1128 0110 0000 0000 		.long	.LVL14
+ 1129 0114 0000 0000 		.long	.LVL15
+ 1130 0118 0200      		.word	0x2
+ 1131 011a 30        		.byte	0x30
+ 1132 011b 9F        		.byte	0x9f
+ 1133 011c 0000 0000 		.long	.LVL15
+ 1134 0120 0000 0000 		.long	.LVL17
+ 1135 0124 0100      		.word	0x1
+ 1136 0126 69        		.byte	0x69
+ 1137 0127 0000 0000 		.long	.LVL17
+ 1138 012b 0000 0000 		.long	.LFE14
+ 1139 012f 0100      		.word	0x1
+ 1140 0131 68        		.byte	0x68
+ 1141 0132 0000 0000 		.long	0
+ 1142 0136 0000 0000 		.long	0
+ 1143               		.section	.debug_aranges,"",@progbits
+ 1144 0000 2400 0000 		.long	0x24
+ 1145 0004 0200      		.word	0x2
+ 1146 0006 0000 0000 		.long	.Ldebug_info0
+ 1147 000a 04        		.byte	0x4
+ 1148 000b 00        		.byte	0
+ 1149 000c 0000      		.word	0
+ 1150 000e 0000      		.word	0
+ 1151 0010 0000 0000 		.long	.Ltext0
+ 1152 0014 6400 0000 		.long	.Letext0-.Ltext0
+ 1153 0018 0000 0000 		.long	.LFB14
+ 1154 001c 4800 0000 		.long	.LFE14-.LFB14
+ 1155 0020 0000 0000 		.long	0
+ 1156 0024 0000 0000 		.long	0
+ 1157               		.section	.debug_ranges,"",@progbits
+ 1158               	.Ldebug_ranges0:
+ 1159 0000 0000 0000 		.long	.LBB13
+ 1160 0004 0000 0000 		.long	.LBE13
+ 1161 0008 0000 0000 		.long	.LBB16
+ 1162 000c 0000 0000 		.long	.LBE16
+ 1163 0010 0000 0000 		.long	0
+ 1164 0014 0000 0000 		.long	0
+ 1165 0018 0000 0000 		.long	.Ltext0
+ 1166 001c 0000 0000 		.long	.Letext0
+ 1167 0020 0000 0000 		.long	.LFB14
+ 1168 0024 0000 0000 		.long	.LFE14
+ 1169 0028 0000 0000 		.long	0
+ 1170 002c 0000 0000 		.long	0
+ 1171               		.section	.debug_line,"",@progbits
+ 1172               	.Ldebug_line0:
+ 1173 0000 7501 0000 		.section	.debug_str,"MS",@progbits,1
+ 1173      0200 5B00 
+ 1173      0000 0201 
+ 1173      FB0E 0A00 
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 24
+
+
+ 1173      0101 0101 
+ 1174               	.LASF24:
+ 1175 0000 5F5A 3134 		.string	"_Z14initialisationv"
+ 1175      696E 6974 
+ 1175      6961 6C69 
+ 1175      7361 7469 
+ 1175      6F6E 7600 
+ 1176               	.LASF19:
+ 1177 0014 5450 3762 		.string	"TP7b.cpp"
+ 1177      2E63 7070 
+ 1177      00
+ 1178               	.LASF14:
+ 1179 001d 6164 6356 		.string	"adcVal"
+ 1179      616C 00
+ 1180               	.LASF12:
+ 1181 0024 5F5A 4E33 		.string	"_ZN3canC2Ev"
+ 1181      6361 6E43 
+ 1181      3245 7600 
+ 1182               	.LASF15:
+ 1183 0030 616D 706C 		.string	"amplification"
+ 1183      6966 6963 
+ 1183      6174 696F 
+ 1183      6E00 
+ 1184               	.LASF20:
+ 1185 003e 443A 5C4F 		.string	"D:\\OneDrive - polymtl.ca_old\\2015-16H\\INF1995\\inf1995-4563\\equipe45\\tp7\\pb2"
+ 1185      6E65 4472 
+ 1185      6976 6520 
+ 1185      2D20 706F 
+ 1185      6C79 6D74 
+ 1186               	.LASF1:
+ 1187 008a 756E 7369 		.string	"unsigned char"
+ 1187      676E 6564 
+ 1187      2063 6861 
+ 1187      7200 
+ 1188               	.LASF10:
+ 1189 0098 7468 6973 		.string	"this"
+ 1189      00
+ 1190               	.LASF13:
+ 1191 009d 5F5A 4E33 		.string	"_ZN3canD2Ev"
+ 1191      6361 6E44 
+ 1191      3245 7600 
+ 1192               	.LASF6:
+ 1193 00a9 6C6F 6E67 		.string	"long unsigned int"
+ 1193      2075 6E73 
+ 1193      6967 6E65 
+ 1193      6420 696E 
+ 1193      7400 
+ 1194               	.LASF9:
+ 1195 00bb 7E63 616E 		.string	"~can"
+ 1195      00
+ 1196               	.LASF25:
+ 1197 00c0 6D61 696E 		.string	"main"
+ 1197      00
+ 1198               	.LASF22:
+ 1199 00c5 5F5A 4E33 		.string	"_ZN3can7lectureEh"
+ 1199      6361 6E37 
+ 1199      6C65 6374 
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 25
+
+
+ 1199      7572 6545 
+ 1199      6800 
+ 1200               	.LASF4:
+ 1201 00d7 756E 7369 		.string	"unsigned int"
+ 1201      676E 6564 
+ 1201      2069 6E74 
+ 1201      00
+ 1202               	.LASF8:
+ 1203 00e4 6C6F 6E67 		.string	"long long unsigned int"
+ 1203      206C 6F6E 
+ 1203      6720 756E 
+ 1203      7369 676E 
+ 1203      6564 2069 
+ 1204               	.LASF2:
+ 1205 00fb 7569 6E74 		.string	"uint8_t"
+ 1205      385F 7400 
+ 1206               	.LASF16:
+ 1207 0103 6272 6F6E 		.string	"bronzage"
+ 1207      7A61 6765 
+ 1207      00
+ 1208               	.LASF17:
+ 1209 010c 636F 6D70 		.string	"compteur"
+ 1209      7465 7572 
+ 1209      00
+ 1210               	.LASF7:
+ 1211 0115 6C6F 6E67 		.string	"long long int"
+ 1211      206C 6F6E 
+ 1211      6720 696E 
+ 1211      7400 
+ 1212               	.LASF11:
+ 1213 0123 5F5F 696E 		.string	"__in_chrg"
+ 1213      5F63 6872 
+ 1213      6700 
+ 1214               	.LASF3:
+ 1215 012d 7569 6E74 		.string	"uint16_t"
+ 1215      3136 5F74 
+ 1215      00
+ 1216               	.LASF18:
+ 1217 0136 474E 5520 		.string	"GNU C++ 4.9.2 -mn-flash=1 -mmcu=avr5 -g -Os -std=c++98 -fpack-struct -fshort-enums -funsi
+ 1217      432B 2B20 
+ 1217      342E 392E 
+ 1217      3220 2D6D 
+ 1217      6E2D 666C 
+ 1218               	.LASF5:
+ 1219 01f8 6C6F 6E67 		.string	"long int"
+ 1219      2069 6E74 
+ 1219      00
+ 1220               	.LASF0:
+ 1221 0201 7369 676E 		.string	"signed char"
+ 1221      6564 2063 
+ 1221      6861 7200 
+ 1222               	.LASF23:
+ 1223 020d 696E 6974 		.string	"initialisation"
+ 1223      6961 6C69 
+ 1223      7361 7469 
+ 1223      6F6E 00
+ 1224               	.LASF21:
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 26
+
+
+ 1225 021c 6C65 6374 		.string	"lecture"
+ 1225      7572 6500 
+ 1226               		.ident	"GCC: (AVR_8_bit_GNU_Toolchain_3.5.4_1709) 4.9.2"
+GAS LISTING C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s 			page 27
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 TP7b.cpp
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:2      *ABS*:0000003e __SP_H__
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:3      *ABS*:0000003d __SP_L__
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:4      *ABS*:0000003f __SREG__
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:5      *ABS*:00000000 __tmp_reg__
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:6      *ABS*:00000001 __zero_reg__
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:12     .text:00000000 _ZN3canC2Ev
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:12     .text:00000000 _ZN3canC1Ev
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:38     .text:0000000c _ZN3canD2Ev
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:38     .text:0000000c _ZN3canD1Ev
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:59     .text:00000012 _ZN3can7lectureEh
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:113    .text:00000058 _Z14initialisationv
+C:\Users\Bruno\AppData\Local\Temp\ccUFDJ2f.s:138    .text.startup:00000000 main
+
+NO UNDEFINED SYMBOLS

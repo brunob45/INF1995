@@ -1,0 +1,40 @@
+École Polytechnique de Montréal
+
+Département de génie informatique et génie logiciel
+
+INF1995: Projet initial en ingénierie informatique 
+         et travail en équipe
+
+Grille de correction des programmes:
+
+Identification:
+  Travail Pratique # :3
+  Section #  :2
+  Équipe #   :62
+  Correcteur :Samuel Lavoie-Marchildon
+
+Lisibilité/Compréhension:  2.5/5
+  En-têtes en début de programme et de fonctions  (1 point) :0
+  Identificateurs significatifs                   (1 point) :1
+  Commentaires aux endroits stratégiques          (1 point) :1
+  Indentation et facilité de lecture              (1 point) :0.5
+  Broches, ressources matérielles bien identif.   (1 point) :0
+
+Modularité:   5/5
+  Choix des structures de contrôle                (1 point) :1
+  Choix de fonctions                              (2 points):2
+  Paramètres de fonctions (mode de transmission)  (2 points):2
+
+Fonctionnalité:   8.25/10
+  Respect des requis                              (2 points):1.25
+  Soumission réussie sous SVN (bon endroit,
+                          sans fichiers inutiles) (2 points):2
+  Compilation sans warnings et sans erreurs       (1 point) :0
+  Fonctionnement correct                          (5 points):5
+
+Total:   15.75/20
+
+Commentaires:
+-Vous devez remettre un Makefile
+-Vous n'avez pas d'état initial définie.
+-Vous n'avez aps encoder les états sur le nombre nécessaire de bits

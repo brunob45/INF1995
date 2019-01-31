@@ -1,0 +1,50 @@
+École Polytechnique de Montréal
+
+Département de génie informatique et génie logiciel
+
+INF1995: Projet initial en ingénierie informatique 
+         et travail en équipe
+
+Grille de correction des programmes:
+
+Identification:
+  Travail Pratique # :3
+  Section #  :2
+  Équipe #   :45
+  Correcteur :Samuel Lavoie-Marchildon
+
+Lisibilité/Compréhension:  4/5
+  En-têtes en début de programme et de fonctions  (1 point) :1
+  Identificateurs significatifs                   (1 point) :1
+  Commentaires aux endroits stratégiques          (1 point) :1
+  Indentation et facilité de lecture              (1 point) :1
+  Broches, ressources matérielles bien identif.   (1 point) :0
+
+Modularité:   5/5
+  Choix des structures de contrôle                (1 point) :1
+  Choix de fonctions                              (2 points):2
+  Paramètres de fonctions (mode de transmission)  (2 points):2
+
+Fonctionnalité:   9.5/10
+  Respect des requis                              (2 points):2
+  Soumission réussie sous SVN (bon endroit,
+                          sans fichiers inutiles) (2 points):1.5
+  Compilation sans warnings et sans erreurs       (1 point) :1
+  Fonctionnement correct                          (5 points):5
+
+Total:   18.5/20
+
+Commentaires:
+-Très bonne idée de mettre toutes les fonctions dans un fichier séparé.
+Par contre, lorsqu'un fichier contient l'implémentation de fonctions, il n'est normalement
+pas appelé un fichier .h. Le fichier .h contient normalement seulement les définitions de fonctions.
+Celles-ci sont ensuite implémentées dans un fichier .cpp. Une autre alternative si vous ne voulez pas
+faire deux fichiez (un .h et un .cpp) est de faire un fichier .hpp. 
+-Dans votre SVN, vous devez seulement inclure les fichier sources et les makefile. 
+Tous les autre fichiers qui peuvent être généré à la compilation ne doivent pas se retrouver dans le SVN (-.5)
+-Dans votre pb1, vous avec 4 états qui font exactement la même chose. Vous auriez pu optimiser votre machie à état
+-Il n'est pas recommandé d'utiliser des int, puisque votre chip est seulement de 16 bits. Il y a donc un cout en performance et en espace
+d'utiliser un int. 
+
+
+
